@@ -44,6 +44,7 @@ import com.hazelcast.internal.cluster.impl.JoinRequest;
 import com.hazelcast.internal.cluster.impl.MulticastJoiner;
 import com.hazelcast.internal.cluster.impl.MulticastService;
 import com.hazelcast.internal.cluster.impl.SplitBrainJoinMessage;
+import com.hazelcast.internal.management.TimedMemberStateFactory;
 import com.hazelcast.internal.usercodedeployment.UserCodeDeploymentClassLoader;
 import com.hazelcast.internal.management.ManagementCenterService;
 import com.hazelcast.internal.partition.InternalPartitionService;
@@ -52,6 +53,7 @@ import com.hazelcast.internal.partition.impl.InternalPartitionServiceImpl;
 import com.hazelcast.internal.serialization.InternalSerializationService;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.LoggingServiceImpl;
+import com.hazelcast.monitor.MonitoringService;
 import com.hazelcast.nio.Address;
 import com.hazelcast.nio.ClassLoaderUtil;
 import com.hazelcast.nio.ConnectionManager;
@@ -150,6 +152,7 @@ public class Node {
     private final boolean liteMember;
 
     private ManagementCenterService managementCenterService;
+    private MonitoringService monitoringService;
 
     private volatile NodeState state;
 
@@ -172,7 +175,7 @@ public class Node {
 
         String policy = properties.getString(SHUTDOWNHOOK_POLICY);
         this.shutdownHookThread = new NodeShutdownHookThread("hz.ShutdownThread", policy);
-        this.buildInfo = BuildInfoProvider.getBuildInfo();
+        this.buildInfo = getBuildInfo();
         this.version = MemberVersion.of(buildInfo.getVersion());
 
         String loggingType = properties.getString(LOGGING_TYPE);
@@ -402,13 +405,67 @@ public class Node {
             logger.warning("Config seed port is " + config.getNetworkConfig().getPort()
                     + " and cluster size is " + clusterSize + ". Some of the ports seem occupied!");
         }
+
+        boolean customMonitoringEnabled = false;
         try {
-            managementCenterService = new ManagementCenterService(hazelcastInstance);
-        } catch (Exception e) {
-            logger.warning("ManagementCenterService could not be constructed!", e);
+            //TODO: Get this classname dynamically
+            Class<?> clazz = Class.forName("com.hazelcast.monitor.impl.HazelcastMonitoringService");
+            Object monitoringInstance = clazz.newInstance();
+            if (monitoringInstance instanceof MonitoringService) {
+                monitoringService = (MonitoringService) monitoringInstance;
+                monitoringService.start();
+                StateSendThread st = new StateSendThread();
+                st.start();
+            }
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        }
+
+        if (!customMonitoringEnabled) {
+            try {
+                managementCenterService = new ManagementCenterService(hazelcastInstance);
+            } catch (Exception e) {
+                logger.warning("ManagementCenterService could not be constructed!", e);
+            }
         }
         nodeExtension.afterStart();
         phoneHome.check(this, getBuildInfo().getVersion(), buildInfo.isEnterprise());
+    }
+
+    private final class StateSendThread extends Thread {
+
+        private final long updateIntervalMs;
+        private TimedMemberStateFactory factory;
+
+        private StateSendThread() {
+            super(getHazelcastThreadGroup().getInternalThreadGroup(), getHazelcastThreadGroup().getThreadNamePrefix("MC.Monitoring.Service"));
+            factory = new TimedMemberStateFactory(hazelcastInstance);
+            updateIntervalMs = calcUpdateInterval();
+        }
+
+        private long calcUpdateInterval() {
+            return TimeUnit.SECONDS.toMillis(5);
+        }
+
+        @Override
+        public void run() {
+            try {
+                while (isRunning()) {
+                    monitoringService.update(factory.createTimedMemberState());
+                    sleep();
+                }
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
+        }
+
+        private void sleep() throws InterruptedException {
+            Thread.sleep(updateIntervalMs);
+        }
     }
 
     @SuppressWarnings("checkstyle:npathcomplexity")
