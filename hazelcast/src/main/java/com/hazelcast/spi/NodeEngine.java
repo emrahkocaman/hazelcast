@@ -21,6 +21,7 @@ import com.hazelcast.core.Cluster;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Member;
 import com.hazelcast.internal.cluster.ClusterService;
+import com.hazelcast.internal.diagnostics.Diagnostics;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.nio.Address;
 import com.hazelcast.nio.serialization.Data;
@@ -287,5 +288,7 @@ public interface NodeEngine {
      * @since 3.8
      */
     MemberVersion getVersion();
+
+    Diagnostics getDiags();
 
 }

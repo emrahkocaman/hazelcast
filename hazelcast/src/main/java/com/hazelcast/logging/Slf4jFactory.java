@@ -19,6 +19,7 @@ package com.hazelcast.logging;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
@@ -28,6 +29,12 @@ public class Slf4jFactory extends LoggerFactorySupport {
     protected ILogger createLogger(String name) {
         Logger logger = LoggerFactory.getLogger(name);
         return new Slf4jLogger(logger);
+    }
+
+    @Override
+    public File getLogFile() {
+        //TODO:
+        return null;
     }
 
     static class Slf4jLogger extends AbstractLogger {

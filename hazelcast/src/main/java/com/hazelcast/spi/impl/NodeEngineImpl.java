@@ -419,6 +419,11 @@ public class NodeEngineImpl implements NodeEngine {
         return node.getVersion();
     }
 
+    @Override
+    public Diagnostics getDiags() {
+        return diagnostics;
+    }
+
     /**
      * Returns a list of services matching provides service class/interface.
      * <br></br>

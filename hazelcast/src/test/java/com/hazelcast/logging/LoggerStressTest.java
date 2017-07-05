@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
+import java.io.File;
 import java.lang.reflect.Field;
 
 import static com.hazelcast.spi.properties.GroupProperty.LOGGING_TYPE;
@@ -121,6 +122,12 @@ public class LoggerStressTest extends HazelcastTestSupport {
         @Override
         public ILogger getLogger(String name) {
             return mock(ILogger.class, withSettings().stubOnly());
+        }
+
+        @Override
+        public File getLogFile() {
+            //TODO:
+            return null;
         }
     }
 

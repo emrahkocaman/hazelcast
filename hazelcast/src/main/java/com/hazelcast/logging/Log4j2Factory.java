@@ -19,6 +19,7 @@ package com.hazelcast.logging;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.spi.ExtendedLogger;
 
+import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
@@ -31,6 +32,12 @@ public class Log4j2Factory extends LoggerFactorySupport {
 
     protected ILogger createLogger(String name) {
         return new Log4j2Logger(LogManager.getContext().getLogger(name));
+    }
+
+    @Override
+    public File getLogFile() {
+        //T
+        return null;
     }
 
     static class Log4j2Logger extends AbstractLogger {

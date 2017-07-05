@@ -19,6 +19,8 @@ package com.hazelcast.logging;
 import com.hazelcast.nio.ClassLoaderUtil;
 import com.hazelcast.util.StringUtil;
 
+import java.io.File;
+
 public final class Logger {
 
     private static volatile LoggerFactory loggerFactory;
@@ -127,5 +129,9 @@ public final class Logger {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public static File getLogFile() {
+        return loggerFactory.getLogFile();
     }
 }

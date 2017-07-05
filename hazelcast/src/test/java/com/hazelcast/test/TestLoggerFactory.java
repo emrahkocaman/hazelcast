@@ -21,6 +21,7 @@ import com.hazelcast.logging.Log4j2Factory;
 import com.hazelcast.logging.LogEvent;
 import com.hazelcast.logging.LoggerFactory;
 
+import java.io.File;
 import java.util.logging.Level;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -42,6 +43,12 @@ public class TestLoggerFactory implements LoggerFactory {
     public ILogger getLogger(String name) {
         ILogger logger = log4j2Factory.getLogger(name);
         return new DelegatingTestLogger(logger);
+    }
+
+    @Override
+    public File getLogFile() {
+        //TODO:
+        return null;
     }
 
     private static class DelegatingTestLogger implements ILogger {

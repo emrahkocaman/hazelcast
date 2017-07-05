@@ -16,7 +16,11 @@
 
 package com.hazelcast.logging;
 
+import java.io.File;
+
 public interface LoggerFactory {
 
     ILogger getLogger(String name);
+
+    File getLogFile();
 }

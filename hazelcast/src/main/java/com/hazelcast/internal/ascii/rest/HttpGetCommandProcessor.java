@@ -17,13 +17,20 @@
 package com.hazelcast.internal.ascii.rest;
 
 import com.hazelcast.cluster.ClusterState;
+import com.hazelcast.config.ConfigXmlGenerator;
 import com.hazelcast.instance.Node;
 import com.hazelcast.instance.NodeState;
 import com.hazelcast.internal.ascii.TextCommandService;
 import com.hazelcast.internal.cluster.ClusterService;
 import com.hazelcast.internal.cluster.impl.ClusterServiceImpl;
+import com.hazelcast.internal.diagnostics.Diagnostics;
 import com.hazelcast.internal.partition.InternalPartitionService;
+import com.hazelcast.logging.Logger;
 import com.hazelcast.nio.ConnectionManager;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import static com.hazelcast.internal.ascii.TextCommandConstants.MIME_TEXT_PLAIN;
 import static com.hazelcast.internal.ascii.rest.HttpCommand.CONTENT_TYPE_BINARY;
@@ -51,10 +58,47 @@ public class HttpGetCommandProcessor extends HttpCommandProcessor<HttpGetCommand
             handleHealthcheck(command);
         } else if (uri.startsWith(URI_CLUSTER_VERSION_URL)) {
             handleGetClusterVersion(command);
+        } else if (uri.startsWith(URI_COLLECT_LOGS)) {
+            handleGetLogs(command);
         } else {
             command.send400();
         }
         textCommandService.sendResponse(command);
+    }
+
+    private void handleGetLogs(HttpGetCommand command) {
+        File folderToBeCompressed = null;
+        try {
+            folderToBeCompressed = File.createTempFile("temp", Long.toString(System.nanoTime()));
+            //TODO:Copy log file to folder;
+            Logger.getLogFile();
+            //TODO: Copy diag file to folder
+            textCommandService.getNode().getNodeEngine().getDiagnostics().currentFile();
+            //TODO: Copy config to folder
+            ConfigXmlGenerator generator = new ConfigXmlGenerator();
+            generator.generate(textCommandService.getNode().config);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (folderToBeCompressed != null) {
+                deleteRecursive(folderToBeCompressed);
+            }
+        }
+    }
+
+    public static boolean deleteRecursive(File path) {
+        if (!path.exists()) try {
+            throw new FileNotFoundException(path.getAbsolutePath());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        boolean ret = true;
+        if (path.isDirectory()){
+            for (File f : path.listFiles()){
+                ret = ret && deleteRecursive(f);
+            }
+        }
+        return ret && path.delete();
     }
 
     private void handleHealthcheck(HttpGetCommand command) {

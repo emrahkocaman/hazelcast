@@ -44,6 +44,8 @@ public abstract class HttpCommandProcessor<T> extends AbstractTextCommandProcess
     public static final String URI_UPDATE_PERMISSIONS = URI_MANCENTER_BASE_URL + "/security/permissions";
     public static final String URI_HEALTH_URL = "/hazelcast/health";
 
+    public static final String URI_COLLECT_LOGS = "/hazelcast/logs";
+
     protected HttpCommandProcessor(TextCommandService textCommandService) {
         super(textCommandService);
     }

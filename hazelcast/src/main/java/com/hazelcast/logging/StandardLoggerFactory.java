@@ -16,6 +16,7 @@
 
 package com.hazelcast.logging;
 
+import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -26,6 +27,12 @@ public class StandardLoggerFactory extends LoggerFactorySupport implements Logge
     protected ILogger createLogger(String name) {
         final Logger l = Logger.getLogger(name);
         return new StandardLogger(l);
+    }
+
+    @Override
+    public File getLogFile() {
+        //TODO:
+        return null;
     }
 
     static class StandardLogger extends AbstractLogger {

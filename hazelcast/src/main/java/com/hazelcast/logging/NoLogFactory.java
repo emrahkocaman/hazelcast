@@ -16,6 +16,7 @@
 
 package com.hazelcast.logging;
 
+import java.io.File;
 import java.util.logging.Level;
 
 public class NoLogFactory implements LoggerFactory {
@@ -25,6 +26,12 @@ public class NoLogFactory implements LoggerFactory {
     @Override
     public ILogger getLogger(String name) {
         return noLogger;
+    }
+
+    @Override
+    public File getLogFile() {
+        //TODO:
+        return null;
     }
 
     static class NoLogger implements ILogger {
